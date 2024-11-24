@@ -2,6 +2,7 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.model_selection import train_test_split
+from sklearn.manifold import TSNE
 import os
 class DataHandler():
     #standart const
@@ -10,7 +11,7 @@ class DataHandler():
         
     #Dosyadan okuma işlemleri    
     def DataScrapper(self):
-        self.csv_data = pd.read_csv(self.data_file_path, header=None, names=["Exam1", "Exam2", "Admitted"])
+        self.csv_data = pd.read_csv(self.data_file_path, header=None, names=["duration","protocol_type","service","flag","src_bytes","dst_bytes","land","wrong_fragment","urgent","hot","num_failed_logins","logged_in","num_compromised","root_shell","su_attempted","num_root","num_file_creations","num_shells","num_access_files","num_outbound_cmds","is_host_login","is_guest_login","count","srv_count","serror_rate","srv_serror_rate","rerror_rate","srv_rerror_rate","same_srv_rate","diff_srv_rate","srv_diff_host_rate","dst_host_count","dst_host_srv_count","dst_host_same_srv_rate","dst_host_diff_srv_rate","dst_host_same_src_port_rate","dst_host_srv_diff_host_rate","dst_host_serror_rate","dst_host_srv_serror_rate","dst_host_rerror_rate","dst_host_srv_rerror_rate","is_anomaly","anomaly_type"])
         print("Data has been parsed succesfully...")
         
     #Veriyi eğitim için bölme (başka class'ta kullanırsak diye veriyi getter ile de alacağız)
@@ -21,8 +22,8 @@ class DataHandler():
             self.validate_data = pd.read_csv("./data/validate_data.txt")
             self.test_data = pd.read_csv("./data/test_data.txt")
         else:
-            self.train_data, self.temp_data = train_test_split(self.csv_data, test_size=0.4, random_state=42, stratify=self.csv_data["Admitted"])
-            self.validate_data, self.test_data = train_test_split(self.temp_data, test_size=0.5, random_state=42, stratify=self.temp_data["Admitted"])
+            self.train_data, self.temp_data = train_test_split(self.csv_data, test_size=0.4, random_state=42)
+            self.validate_data, self.test_data = train_test_split(self.temp_data, test_size=0.5, random_state=42)
             self.train_data.to_csv("./data/train_data.txt", index=False)
             self.validate_data.to_csv("./data/validate_data.txt", index=False)
             self.test_data.to_csv("./data/test_data.txt", index=False)
@@ -31,17 +32,28 @@ class DataHandler():
 
     
     def DataVisualazation(self):
+        #TSNE ile veriyi 2 boyuta indirgeyip görselleştirme işlemi bu işlemi yapmazsak veriyi görselleştiremeyiz
+        features = self.train_data.drop(columns=['is_anomaly', 'anomaly_type'])
+        features = pd.get_dummies(features)
+        tsne = TSNE(n_components=2, random_state=42, perplexity=30,learning_rate=200, n_iter=1000)
+        tsne_results = tsne.fit_transform(features)
+        
+        self.train_data['tsne-2d-one'] = tsne_results[:,0]
+        self.train_data['tsne-2d-two'] = tsne_results[:,1]
+        
         plt.figure(figsize=(10, 10))
         for label, color in zip([0, 1], ['red', 'green']):
-            subset = self.train_data[self.train_data['Admitted'] == label]
-            plt.scatter(subset['Exam1'], subset['Exam2'], c=color, label=f"Admitted={label}", alpha=0.7) 
-        plt.title("Scatter Plot of Training Data")
-        plt.xlabel("Exam 1 Scores")
-        plt.ylabel("Exam 2 Scores") 
+            subset = self.train_data[self.train_data['is_anomaly'] == label]
+            plt.scatter(subset['tsne-2d-one'], subset['tsne-2d-two'], c=color, label=f"Anomaly={label}", alpha=0.7) 
+        plt.title("TSNE Scatter Plot of Training Data")
+        plt.xlabel("TSNE Component 1")
+        plt.ylabel("TSNE Component 2") 
         plt.legend()
         plt.grid(alpha=0.5)
         plt.show()
         print("Data visualized successfully...")
+        
+
         
     def TrainDataGet(self):
         return self.train_data

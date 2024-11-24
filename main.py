@@ -4,7 +4,7 @@ import LogisticRegression
 import numpy as np
 def main():
     ### verileri alıyoruz burada data içerisinde bölünmüş halde veriler zaten bulunuyorsa işlem yapmıyoruz ###
-    data = DataHandler.DataHandler("./data/hw1Data.txt")
+    data = DataHandler.DataHandler("./data/prepared_anomaly_data_no_label.csv")
     data.DataScrapper()
     data.DataSplitter()
     data.DataVisualazation()
