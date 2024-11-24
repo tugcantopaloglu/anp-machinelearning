@@ -1,9 +1,12 @@
 import pandas as pd
-import numpy as np
+#import numpy as np
+import os
 import matplotlib.pyplot as plt
 from sklearn.model_selection import train_test_split
 from sklearn.manifold import TSNE
-import os
+from sklearn.preprocessing import MinMaxScaler
+
+
 class DataHandler():
     #standart const
     def __init__(self, data_file_path):
@@ -37,13 +40,13 @@ class DataHandler():
         features = pd.get_dummies(features)
         tsne = TSNE(n_components=2, random_state=42, perplexity=30,learning_rate=200, n_iter=1000)
         tsne_results = tsne.fit_transform(features)
-        
-        self.train_data['tsne-2d-one'] = tsne_results[:,0]
-        self.train_data['tsne-2d-two'] = tsne_results[:,1]
+        train_data_tsne = self.train_data.copy()
+        train_data_tsne['tsne-2d-one'] = tsne_results[:,0]
+        train_data_tsne['tsne-2d-two'] = tsne_results[:,1]
         
         plt.figure(figsize=(10, 10))
         for label, color in zip([0, 1], ['red', 'green']):
-            subset = self.train_data[self.train_data['is_anomaly'] == label]
+            subset = self.train_data_tsne[self.train_data_tsne['is_anomaly'] == label]
             plt.scatter(subset['tsne-2d-one'], subset['tsne-2d-two'], c=color, label=f"Anomaly={label}", alpha=0.7) 
         plt.title("TSNE Scatter Plot of Training Data")
         plt.xlabel("TSNE Component 1")
@@ -53,7 +56,16 @@ class DataHandler():
         plt.show()
         print("Data visualized successfully...")
         
-
+    def OneHotEncoding(self, categorical_columns = ['protocol_type','service','flag','anomaly_type'], numerical_columns = ['duration','src_bytes', 'dst_bytes', 'land', 'wrong_fragment','urgent','hot', 'num_failed_logins','logged_in','num_compromised','root_shell','su_attempted','num_root','num_file_creations','num_shells','num_access_files','num_outbound_cmds','is_host_login','is_guest_login',
+    'count','srv_count','serror_rate','srv_serror_rate','rerror_rate','srv_rerror_rate','same_srv_rate','diff_srv_rate','srv_diff_host_rate','dst_host_count','dst_host_srv_count','dst_host_same_srv_rate',
+    'dst_host_diff_srv_rate', 'dst_host_same_src_port_rate','dst_host_srv_diff_host_rate', 'dst_host_serror_rate','dst_host_srv_serror_rate','dst_host_rerror_rate','dst_host_srv_rerror_rate']):
+        self.encoded_train_data = pd.get_dummies(self.train_data, columns=categorical_columns, drop_first=True)
+        scaler = MinMaxScaler()
+        scaled_numerical_features = scaler.fit_transform(self.encoded_train_data[numerical_columns])
+        scaled_train_data = self.encoded_train_data.copy()
+        scaled_train_data[numerical_columns] = scaled_numerical_features
+        self.encoded_train_data = scaled_train_data
+        
         
     def TrainDataGet(self):
         return self.train_data
@@ -63,4 +75,7 @@ class DataHandler():
     
     def TestDataGet(self):
         return self.test_data
+    
+    def EncodedTrainDataGet(self):
+        return self.encoded_train_data
     

@@ -1,14 +1,22 @@
 #Modülerlik sağlanması amacıyla tüm işlemler farklı class'larda yapılıp burada bulunan main classında çağrılmıştır
 import DataHandler
-import LogisticRegression 
+import ModelTrainer 
 import numpy as np
 def main():
     ### verileri alıyoruz burada data içerisinde bölünmüş halde veriler zaten bulunuyorsa işlem yapmıyoruz ###
     data = DataHandler.DataHandler("./data/prepared_anomaly_data_no_label.csv")
     data.DataScrapper()
     data.DataSplitter()
-    data.DataVisualazation()
-     
+    #data.DataVisualazation()
+    data.OneHotEncoding()
+    
+    train_data = data.EncodedTrainDataGet()
+    x_train = train_data.filter(regex='^(?!anomaly)', axis=1)
+    y_train = train_data.filter(regex='^anomaly.*$', axis=1)
+    
+    model = ModelTrainer.ModelTrainer("RandomForest Model")
+    model.RandomForest(x_train, y_train)
+    model.CalculateMetricsOnTestData()
     
     
     

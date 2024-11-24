@@ -1,17 +1,28 @@
-#burada her şeyi kendim yazmaya çalıştım hesaplamaları derste öğrendiğimiz fonksiyonlardan aldığım notlardan oluşturdum aşağıdaki kütüphaneleri sadece matematik işlemleri ve görselleştirme için ekledim
 import math
 import matplotlib.pyplot as plt
 import pandas as pd
 import DataHandler
-class LogisticRegression():
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.metrics import classification_report, confusion_matrix
+class ModelTrainer():
     
     def __init__(self,model_name) -> None:
         self.model_name = model_name
     
+    #binary classification yapan random forest modeli eğitiyoruz ve modeli kaydediyoruz
+    def RandomForest(self, x_train, y_train):
+        rf_model = RandomForestClassifier(random_state=42, n_estimators=100, class_weight="balanced")
+        rf_model.fit(x_train, y_train)
+        self.rf_model = rf_model
+        #self.rf_model.save_model("./models/random_forest_model")
+        print(self.rf_model)
+        print("Multi-Class Random Forest Model Trained Successfully...")
+    
+    
     
     #test ile deneme yaparak skorları hesaplıyoruz
     def CalculateMetricsOnTestData(self,threshold = 0.5,check_threshold=False):
-        data_handler = DataHandler.DataHandler("./data/hw1Data.txt")
+        data_handler = DataHandler.DataHandler("./data/prepared_anomaly_data_no_label.csv")
         data_handler.DataSplitter()
         x_test = data_handler.TestDataGet()[["Exam1", "Exam2"]].to_numpy()
         y_test = data_handler.TestDataGet()["Admitted"].to_numpy()
