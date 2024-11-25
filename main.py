@@ -9,14 +9,14 @@ def main():
     data.DataSplitter()
     #data.DataVisualazation()
     data.OneHotEncoding()
-    
+    data.OneHotEncodingTestData()
     train_data = data.EncodedTrainDataGet()
     x_train = train_data.filter(regex='^(?!anomaly)', axis=1)
     y_train = train_data.filter(regex='^anomaly.*$', axis=1)
     
     model = ModelTrainer.ModelTrainer("RandomForest Model")
     model.RandomForest(x_train, y_train)
-    model.CalculateMetricsOnTestData()
+    model.CalculateMetricsOnTestData(test_data=data.EncodedTestDataGet())
     
     
     

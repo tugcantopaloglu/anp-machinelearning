@@ -65,7 +65,14 @@ class DataHandler():
         scaled_train_data = self.encoded_train_data.copy()
         scaled_train_data[numerical_columns] = scaled_numerical_features
         self.encoded_train_data = scaled_train_data
-        
+    
+    def OneHotEncodingTestData(self, categorical_columns = ['protocol_type','service','flag','anomaly_type'], numerical_columns = ['duration','src_bytes', 'dst_bytes', 'land', 'wrong_fragment','urgent','hot', 'num_failed_logins','logged_in','num_compromised','root_shell','su_attempted','num_root','num_file_creations','num_shells','num_access_files','num_outbound_cmds','is_host_login','is_guest_login','count','srv_count','serror_rate','srv_serror_rate','rerror_rate','srv_rerror_rate','same_srv_rate','diff_srv_rate','srv_diff_host_rate','dst_host_count','dst_host_srv_count','dst_host_same_srv_rate','dst_host_diff_srv_rate','dst_host_same_src_port_rate','dst_host_srv_diff_host_rate','dst_host_serror_rate','dst_host_srv_serror_rate','dst_host_rerror_rate','dst_host_srv_rerror_rate']):
+        self.encoded_test_data = pd.get_dummies(self.test_data, columns=categorical_columns, drop_first=True)
+        scaler = MinMaxScaler()
+        scaled_numerical_features = scaler.fit_transform(self.encoded_test_data[numerical_columns])
+        scaled_test_data = self.encoded_test_data.copy()
+        scaled_test_data[numerical_columns] = scaled_numerical_features
+        self.encoded_test_data = scaled_test_data
         
     def TrainDataGet(self):
         return self.train_data
@@ -78,4 +85,10 @@ class DataHandler():
     
     def EncodedTrainDataGet(self):
         return self.encoded_train_data
+    
+    def EncodedTestDataGet(self):
+        return self.encoded_test_data
+    
+    def EncodedValidateDataGet(self):
+        return self.encoded_validate_data
     

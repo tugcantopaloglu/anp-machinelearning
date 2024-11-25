@@ -1,0 +1,13 @@
+###
+RandomForest Model Scores:
+Model Evaluation on Test Set:
+Accuracy: 0.9985
+Precision: 0.7999
+Recall: 0.7905
+F1-Score: 0.7951
+###
+Accuracy: %99.85
+Precision: %79.99
+Recall: %79.05
+F1-Score: %79.51
+###

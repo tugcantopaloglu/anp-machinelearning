@@ -1,9 +1,9 @@
-import math
 import matplotlib.pyplot as plt
 import pandas as pd
 import DataHandler
 from sklearn.ensemble import RandomForestClassifier
-from sklearn.metrics import classification_report, confusion_matrix
+from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
+
 class ModelTrainer():
     
     def __init__(self,model_name) -> None:
@@ -15,24 +15,33 @@ class ModelTrainer():
         rf_model.fit(x_train, y_train)
         self.rf_model = rf_model
         #self.rf_model.save_model("./models/random_forest_model")
-        print(self.rf_model)
+        self.feature_names = x_train.columns.tolist()
+        with open("./models/feature_names.txt", "w") as f:
+            f.write("\n".join(self.feature_names))
         print("Multi-Class Random Forest Model Trained Successfully...")
     
     
     
     #test ile deneme yaparak skorları hesaplıyoruz
-    def CalculateMetricsOnTestData(self,threshold = 0.5,check_threshold=False):
-        data_handler = DataHandler.DataHandler("./data/prepared_anomaly_data_no_label.csv")
-        data_handler.DataSplitter()
-        x_test = data_handler.TestDataGet()[["Exam1", "Exam2"]].to_numpy()
-        y_test = data_handler.TestDataGet()["Admitted"].to_numpy()
-        y_prediction = []
-        for i in range(len(y_test)):
-            lineer_combination = sum(self.weights[j] * x_test[i][j] for j in range(len(self.weights)))
-            y_prediction.append(1 if self.Sigmoid(lineer_combination) >= threshold else 0)
+    def CalculateMetricsOnTestData(self,test_data,threshold = 0.5,check_threshold=False):
+        x_test = test_data.filter(regex='^(?!anomaly)', axis=1)
+        y_test = test_data.filter(regex='^anomaly.*$', axis=1)
+        print(x_test)
+        # Özellikleri yükle ve eksik olanları tamamla
+        with open("./models/feature_names.txt", "r") as f:
+            feature_names = f.read().splitlines()
 
-        # Metrikleri hesapla
-        accuracy, precision, recall, f1_score = self.Metrics(y_test, y_prediction)
+        missing_features = set(feature_names) - set(x_test.columns)
+        for feature in missing_features:
+            x_test[feature] = 0
+        
+        x_test = x_test[feature_names]  # Sıralamayı düzelt
+        y_pred = self.rf_model.predict(x_test)
+        
+        accuracy = accuracy_score(y_test, y_pred)
+        precision = precision_score(y_test, y_pred,average='macro')
+        recall = recall_score(y_test, y_pred,average='macro')
+        f1 = f1_score(y_test, y_pred,average='macro')
         
         #optimum thresholdu bulurken bu çıktıları vermesini istemiyoruz bundan dolayı böyle bir kontrol yapıyoruz
         if (check_threshold == False):
@@ -45,14 +54,14 @@ class ModelTrainer():
             print(f"Accuracy: {accuracy:.4f}")
             print(f"Precision: {precision:.4f}")
             print(f"Recall: {recall:.4f}")
-            print(f"F1-Score: {f1_score:.4f}")
+            print(f"F1-Score: {f1:.4f}")
             print("###")
             print("")
             print("Percentage Calculation:")
             print(f"Accuracy: %{accuracy*100:.2f}")
             print(f"Precision: %{precision*100:.2f}")
             print(f"Recall: %{recall*100:.2f}")
-            print(f"F1-Score: %{f1_score*100:.2f}")
+            print(f"F1-Score: %{f1*100:.2f}")
             
             with open("./results/scores.txt", 'a+') as f:
                 if threshold != 0.5:
@@ -63,12 +72,12 @@ class ModelTrainer():
                 f.write(f"Accuracy: {accuracy:.4f}\n")
                 f.write(f"Precision: {precision:.4f}\n")
                 f.write(f"Recall: {recall:.4f}\n")
-                f.write(f"F1-Score: {f1_score:.4f}\n")
+                f.write(f"F1-Score: {f1:.4f}\n")
                 f.write("###\n")
                 f.write(f"Accuracy: %{accuracy*100:.2f}\n")
                 f.write(f"Precision: %{precision*100:.2f}\n")
                 f.write(f"Recall: %{recall*100:.2f}\n")
-                f.write(f"F1-Score: %{f1_score*100:.2f}\n")
+                f.write(f"F1-Score: %{f1*100:.2f}\n")
                 f.write("###\n")
             
         
