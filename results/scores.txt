@@ -11,3 +11,29 @@ Precision: %79.99
 Recall: %79.05
 F1-Score: %79.51
 ###
+###
+RandomForest Model Scores:
+Model Evaluation on Test Set:
+Accuracy: 0.9986
+Precision: 0.9999
+Recall: 0.8271
+F1-Score: 0.8568
+###
+Accuracy: %99.86
+Precision: %99.99
+Recall: %82.71
+F1-Score: %85.68
+###
+###
+RandomForest Model Scores:
+Model Evaluation on Test Set:
+Accuracy: 0.9986
+Precision: 0.9999
+Recall: 0.8271
+F1-Score: 0.8568
+###
+Accuracy: %99.86
+Precision: %99.99
+Recall: %82.71
+F1-Score: %85.68
+###
