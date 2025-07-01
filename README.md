@@ -100,6 +100,67 @@ You can find example plots and logs inside the `notebooks/` or `outputs/` folder
 
 ---
 
+# Model Zoo
+| Algorithm | Key Params | Overfitting? | Notes |
+|-----------|------------|--------------|-------|
+| Naïve Bayes | GaussianNB | **Low** | Best overall generalisation. |
+| MLP | 2 × 128 neurons, *early‑stopping* | Low‑Medium | 93 % F1 live. |
+| Logistic Reg. | C ∈ {1,10} | Medium | 76 % F1 live – borderline. |
+| Random Forest | 300 trees | **High** | Severe overfit; rejected. |
+| Decision Tree | depth = None | High | Rejected. |
+| SVM | RBF, C = 1 | High | Rejected. |
+| KNN | k = 2 | High | Rejected. |
+| Gradient Boost | 200 estimators | High | Rejected. |
+| LightGBM | default params | High | Rejected. |
+| AdaBoost | 200 estimators | High | Rejected. |
+
+## Training & Evaluation
+Run **all** experiments:
+
+```bash
+python src/train.py --config configs/all_models.yaml
+python src/evaluate.py --checkpoint results/model_weights/<model>.pkl
+```
+
+Metrics computed:
+- **Accuracy**, **Precision**, **Recall**, **F1**, **ROC‑AUC**
+- K‑fold (k = 5) cross‑validation to gauge variance.
+
+Detailed confusion matrices and ROC curves are saved in `results/` for every model.
+
+## Results
+| Model | CV Mean | Test Accuracy | Live Accuracy | Live F1 |
+|-------|---------|---------------|-----------------------|---------|
+| **Naïve Bayes** | 0.903 | 0.906 | **0.82** | **0.87** |
+| **MLP** | 0.967 | 0.957 | **0.91** | **0.93** |
+| Logistic Reg. | 0.957 | 0.954 | 0.74 | 0.76 |
+| Others | > 0.97 | > 0.98 | ≈ 0.20 | ≈ 0.22 |
+
+**Interpretation**  
+Low‑complexity generative models (NB) and moderately sized neural nets (MLP) balance bias/variance best on heterogeneous traffic, whereas tree‑based ensembles memorise training flows and collapse on unseen subnets.
+
+## Usage
+### 1. Batch Scoring
+```bash
+python src/api.py batch --input data/processed/new_capture.csv                         --model checkpoints/naive_bayes.pkl                         --output predictions.csv
+```
+
+### 2. Real‑time API (FastAPI)
+```bash
+uvicorn src.api:app --host 0.0.0.0 --port 8080
+# POST /predict {"features": [...]}  → {"anomaly": true, "score": 0.92}
+```
+
+### 3. SIEM Integration
+`api.py` returns JSON for direct ingestion by Splunk/ELK.  
+A webhook example is provided in `integrations/`.
+
+## Future Work
+- **Attack Type Classification** (e.g., DoS vs. Probe) with deep architectures (CNN‑1D, GRU, Transformer).  
+- **Online Learning** to adapt to concept drift in evolving traffic.  
+- **Adversarial Robustness** testing (evasion & poisoning).  
+- **Edge Deployment** on programmable NIC / FPGA for wire‑speed inference.
+
 ## 📌 TODOs & Notes
 
 - Add advanced anomaly detection models (LSTM, Variational Autoencoders)
